@@ -59,7 +59,7 @@ function ChatUser() {
           isOnline={false}
           _id="sg"
         />
-        <Divider sx={{ padding: 0 }} />,
+        <Divider sx={{ padding: 0 }} />
         <UserList
           lastMessage="Hello jan"
           time="2m"

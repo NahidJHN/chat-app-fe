@@ -14,14 +14,22 @@ import ChatBox from "./ChatBox/ChatBox";
 export default function HomePage() {
   return (
     <Container sx={{ paddingY: 2 }}>
-      <Grid container spacing={3}>
-        <Grid md={4}>
+      <Grid
+        container
+        spacing={1}
+        sx={{
+          backgroundColor: "primary",
+          color: "text.white",
+          borderRadius: 5,
+          padding: 2,
+        }}
+      >
+        <Grid md={4} sx={{ border: "1px solid #ddd" }}>
           <ChatUser />
         </Grid>
-        <Grid md={5}>
+        <Grid md={8} sx={{ border: "1px solid #ddd" }}>
           <ChatBox />
         </Grid>
-        <Grid md={3}>current user side</Grid>
       </Grid>
     </Container>
   );
