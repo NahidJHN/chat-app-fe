@@ -19,6 +19,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import SupportIcon from "@mui/icons-material/Support";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ThemeRegistry from "@/components/ThemeRegistry/ThemeRegistry";
+import SocketContextProvider from "@/context/Socket.context";
 
 export const metadata = {
   title: "Next.js App Router + Material UI v5",
@@ -33,7 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <ThemeRegistry>
+          <SocketContextProvider>{children}</SocketContextProvider>
+        </ThemeRegistry>
       </body>
     </html>
   );

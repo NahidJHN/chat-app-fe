@@ -13,7 +13,7 @@ function Message({ isUser, message }) {
       <Stack
         direction={isUser ? "row-reverse" : "row"}
         spacing={1}
-        width="70%"
+        maxWidth="70%"
         justifyContent="end"
       >
         {!isUser && <Avatar></Avatar>}

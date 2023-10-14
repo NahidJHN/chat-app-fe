@@ -14,11 +14,12 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import UserList from "./UserList";
-import jwtDecode from "jwt-decode";
 import baseUrl from "@/utils/baseURL";
 import dayjs from "dayjs";
+import useAuthUser from "@/hooks/AuthUser";
+import { SocketContext } from "@/context/Socket.context";
 
 function ChatUser() {
   const [conversations, setConversations] = useState<any[]>([]);
@@ -26,13 +27,14 @@ function ChatUser() {
   const [users, setUsers] = useState<any>([]);
   const [timerId, setTimerId] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState<any>();
 
-  const handleSelect = (user: any) => async () => {
+  const user = useAuthUser();
+  const { onlineUsers } = useContext(SocketContext);
+  const handleSelect = (participant: any) => async () => {
     //create conversation
     const conversation = {
-      creator: token._id,
-      participant: user._id,
+      creator: user?._id,
+      participant: participant._id,
     };
 
     const createConversation = async () => {
@@ -75,19 +77,11 @@ function ChatUser() {
   };
 
   useEffect(() => {
-    const getToken = localStorage.getItem("chat-app-token");
-    if (getToken) {
-      const decodeToken: any = jwtDecode(getToken);
-      setToken(decodeToken);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (token) {
+    if (user) {
       // fetch conversation
       const getConversation = async () => {
         try {
-          const { data } = await baseUrl(`conversations/${token._id}`);
+          const { data } = await baseUrl(`conversations/${user._id}`);
           setConversations(data.data);
         } catch (error) {
           console.log(error);
@@ -95,7 +89,7 @@ function ChatUser() {
       };
       getConversation();
     }
-  }, [token]);
+  }, [user]);
 
   return (
     <Stack>
@@ -192,18 +186,27 @@ function ChatUser() {
         }}
       >
         {conversations.map((conversation: any, index: number) => {
-          const user =
-            conversation?.creator._id === token._id
+          const participant =
+            conversation?.creator._id === user?._id
               ? conversation?.participant
               : conversation?.creator;
+
+          if (onlineUsers.length) {
+            onlineUsers.forEach((item: any) => {
+              if (item._id === participant._id) {
+                participant.isOnline = true;
+                participant.socketId = item.socketId;
+              }
+            });
+          }
           return (
             <>
               <UserList
                 lastMessage={conversation.lastMessage || "No message"}
                 time={dayjs(conversation.lastUpdate).format("hh:mm A")}
-                userName={user.name}
-                userAvatar={user?.avatar}
-                isOnline={user.isOnline}
+                userName={participant.name}
+                userAvatar={participant?.avatar}
+                isOnline={participant.isOnline}
                 _id={conversation._id}
               />
               {index !== conversations.length - 1 && (

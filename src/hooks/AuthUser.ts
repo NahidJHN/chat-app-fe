@@ -13,7 +13,7 @@ function useAuthUser() {
       const fetchUser = async () => {
         try {
           const { data } = await baseUrl.get(`users/${decodeToken._id}`);
-          setUser(data);
+          setUser(data.data);
         } catch (error) {
           console.log(error);
         }

@@ -1,60 +1,152 @@
-import { Box, Divider, InputAdornment, Stack, TextField } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Divider,
+  InputAdornment,
+  Stack,
+  TextField,
+} from "@mui/material";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import ChatBoxHeader from "./ChatBox-Header";
 import SendIcon from "@mui/icons-material/SendOutlined";
 import Message from "../../components/Message/Message";
 import { useSearchParams } from "next/navigation";
 import baseUrl from "@/utils/baseURL";
-import jwtDecode from "jwt-decode";
 import useAuthUser from "@/hooks/AuthUser";
+import { SocketContext } from "@/context/Socket.context";
 
 function ChatBox() {
-  const [token, setToken] = useState<any>(null); //token._id
+  const boxRef = useRef<HTMLElement>(null);
+
   const [messages, setMessages] = useState<any[]>([]);
+  const [participant, setParticipant] = useState<any>(null); //participant is the user with whom the current user is chatting
+
   const user = useAuthUser();
   const searchParams = useSearchParams();
-
   const conversationId = searchParams.get("conversationId");
 
-  useEffect(() => {
-    const getToken = localStorage.getItem("chat-app-token");
-    if (!getToken) return;
-    const token = jwtDecode(getToken);
-    setToken(token);
-  }, []);
+  const { socket, onlineUsers } = useContext(SocketContext);
+
+  // const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {};
+
+  const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
+    const formData = new FormData(e.currentTarget);
+
+    e.preventDefault();
+    const message = {
+      sender: user?._id,
+      content: formData.get("message"),
+      conversation: conversationId,
+      socketId: participant.socketId,
+      receiver: participant._id,
+    };
+
+    socket?.emit("chat", message, (data: any) => {
+      const prevState = [...messages];
+      prevState.push(data);
+      setMessages(prevState);
+    });
+
+    e.currentTarget.reset();
+  };
 
   useEffect(() => {
     //fetch messages function
     const fetchMessages = async () => {
       try {
         const { data } = await baseUrl.get(`messages/${conversationId}`);
+        console.log(data);
         setMessages(data.data);
       } catch (error) {
         console.log(error);
       }
     };
     fetchMessages();
-  }, [conversationId]);
+
+    if (user && conversationId) {
+      const fetchParticipant = async () => {
+        try {
+          const { data } = await baseUrl.get(
+            `users/${user?._id}/${conversationId}`
+          );
+          if (onlineUsers.length) {
+            onlineUsers?.forEach((item: any) => {
+              if (item._id === data.data._id) {
+                data.data.isOnline = false;
+                data.data.socketId = item.socketId;
+              }
+            });
+          }
+
+          setParticipant(data.data);
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+      fetchParticipant();
+    }
+
+    return () => {
+      socket?.disconnect();
+    };
+  }, [conversationId, user]);
+
+  useEffect(() => {
+    socket?.on("chat", (data: any) => {
+      const prevState = [...messages];
+      prevState.push(data);
+      setMessages(prevState);
+    });
+  }, [messages]);
+
+  useEffect(() => {
+    if (boxRef.current) {
+      boxRef.current.scrollTop = boxRef.current.scrollHeight + 500;
+    }
+  }, [boxRef.current?.scrollTop, messages]);
 
   return (
     <Stack>
-      <ChatBoxHeader isOnline={false} lastActiveTime="" userName="Nahid" />
+      <ChatBoxHeader
+        isOnline={participant?.isOnline || false}
+        lastActiveTime={participant?.lastActiveTime}
+        userName={participant?.name}
+        avatar={participant?.avatar}
+      />
       <Divider />
       <Box>
         <Stack justifyContent="space-between" direction="column" height="85vh">
-          <Box height="100%" sx={{ overflowY: "auto" }}>
+          <Box
+            height="100%"
+            sx={{
+              overflowY: "auto",
+              scrollBehavior: "smooth",
+            }}
+            ref={boxRef}
+          >
             {messages.map((message) => {
-              const isUser = message.sender._id === token._id;
-
-              return <Message isUser={isUser} message={message.content} />;
+              const isUser = message.sender === user?._id;
+              return (
+                <Message
+                  key={message._id}
+                  isUser={isUser}
+                  message={message.content}
+                />
+              );
             })}
           </Box>
           <Box>
-            <Stack direction="row">
+            <Stack
+              direction="row"
+              component="form"
+              onSubmit={handleSendMessage}
+            >
               <TextField
                 fullWidth
                 size="small"
                 type="text"
+                name="message"
                 placeholder="Type a message"
                 sx={{
                   width: "90%",
@@ -65,7 +157,11 @@ function ChatBox() {
                 }}
                 InputProps={{
                   endAdornment: (
-                    <InputAdornment position="end">
+                    <InputAdornment
+                      position="end"
+                      component={Button}
+                      type="submit"
+                    >
                       <SendIcon
                         sx={{ cursor: "pointer", color: "primary.main" }}
                       />
