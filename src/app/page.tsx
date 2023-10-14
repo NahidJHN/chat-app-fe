@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -7,11 +9,25 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
-import { Container, Divider } from "@mui/material";
+import { Button, Container, Divider } from "@mui/material";
 import ChatUser from "./ChatUser/ChatUser";
 import ChatBox from "./ChatBox/ChatBox";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter();
+
+  if (localStorage.getItem("chat-app-token") === null) {
+    return (
+      <>
+        <Typography variant="h3">
+          You need to login to access this page
+        </Typography>
+        <Button onClick={() => router.push("/auth/login")}>Login Now</Button>;
+      </>
+    );
+  }
+
   return (
     <Container sx={{ paddingY: 2 }}>
       <Grid

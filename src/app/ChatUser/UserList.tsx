@@ -57,7 +57,7 @@ const StyledBadge = styled(Badge)<BadgeOwnProps>(({ theme, isOnline }) => ({
 function UserList(props: PropTypes) {
   return (
     <Link
-      href={"/" + props._id}
+      href={"?conversationId=" + props._id}
       component={NextLink}
       variant="body2"
       sx={{ textDecoration: "none", color: "initial" }}
@@ -73,13 +73,12 @@ function UserList(props: PropTypes) {
           },
         }}
       >
-        {/* <ListItemAvatar> */}
         <UserAvatar
           isOnline={props.isOnline}
           userAvatar={props.userAvatar}
           userName={props.userAvatar}
         />
-        {/* </ListItemAvatar> */}
+
         <ListItemText
           primary={props.userName}
           secondary={
