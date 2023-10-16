@@ -3,10 +3,9 @@
 import * as React from "react";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemAvatar from "@mui/material/ListItemAvatar";
-import Avatar from "@mui/material/Avatar";
+
 import Typography from "@mui/material/Typography";
-import { Badge, Link, Stack, Theme } from "@mui/material";
+import { Badge, Link, Stack } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import NextLink from "next/link";
 import UserAvatar from "./UserAvater";
@@ -18,6 +17,7 @@ interface PropTypes {
   userAvatar: string;
   isOnline: false;
   _id: string;
+  isRead: boolean;
 }
 interface BadgeOwnProps {
   isOnline: boolean;
@@ -68,8 +68,9 @@ function UserList(props: PropTypes) {
           borderRadius: 5,
           cursor: "pointer",
           padding: 2,
+
           ":hover": {
-            backgroundColor: "#ddd",
+            backgroundColor: "action.focus",
           },
         }}
       >
@@ -80,6 +81,7 @@ function UserList(props: PropTypes) {
         />
 
         <ListItemText
+          sx={{ color: props.isRead ? "success.main" : "common.white" }}
           primary={props.userName}
           secondary={
             <Stack
@@ -92,7 +94,7 @@ function UserList(props: PropTypes) {
                 sx={{ display: "inline" }}
                 component="span"
                 variant="body2"
-                color="grey.500"
+                color={props.isRead ? "grey.500" : "common.white"}
               >
                 {props.lastMessage}
               </Typography>
@@ -102,7 +104,7 @@ function UserList(props: PropTypes) {
                 variant="body2"
                 color="grey.500"
               >
-                .{props.time}
+                {props.time}
               </Typography>
             </Stack>
           }

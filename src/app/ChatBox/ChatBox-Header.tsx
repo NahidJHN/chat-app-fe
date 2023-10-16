@@ -19,41 +19,43 @@ interface ChatBoxProps {
 function ChatBoxHeader(props: ChatBoxProps) {
   return (
     <Box sx={{ border: "1 px solid #ddd" }}>
-      <Stack direction="row" alignItems="center">
-        <UserAvatar
-          userAvatar={props.avatar}
-          userName={props.userName}
-          isOnline={props.isOnline}
-        />
-        <ListItemText
-          primary={props.userName}
-          secondary={
-            props.isOnline
-              ? "Active now"
-              : dayjs(props.lastActiveTime).fromNow()
-          }
-        />
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            "& >*": {
-              cursor: "pointer",
-              color: "primary.main",
-            },
-          }}
-        >
-          <IconButton>
-            <CallIcon />
-          </IconButton>
-          <IconButton>
-            <VideoCallIcon />
-          </IconButton>
-          <IconButton>
-            <MoreVertIcon />
-          </IconButton>
+      {props.userName && (
+        <Stack direction="row" alignItems="center">
+          <UserAvatar
+            userAvatar={props.avatar}
+            userName={props.userName}
+            isOnline={props.isOnline}
+          />
+          <ListItemText
+            primary={props.userName}
+            secondary={
+              props.isOnline
+                ? "Active now"
+                : dayjs(props.lastActiveTime).fromNow()
+            }
+          />
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              "& >*": {
+                cursor: "pointer",
+                color: "primary.main",
+              },
+            }}
+          >
+            <IconButton>
+              <CallIcon />
+            </IconButton>
+            <IconButton>
+              <VideoCallIcon />
+            </IconButton>
+            <IconButton>
+              <MoreVertIcon />
+            </IconButton>
+          </Stack>
         </Stack>
-      </Stack>
+      )}
     </Box>
   );
 }

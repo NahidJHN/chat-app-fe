@@ -29,7 +29,7 @@ function ChatUser() {
   const [loading, setLoading] = useState(false);
 
   const user = useAuthUser();
-  const { onlineUsers } = useContext(SocketContext);
+  const { onlineUsers, socket } = useContext(SocketContext);
   const handleSelect = (participant: any) => async () => {
     //create conversation
     const conversation = {
@@ -41,7 +41,7 @@ function ChatUser() {
       //hit create conversation api
       try {
         const { data } = await baseUrl.post("conversations", conversation);
-        window.location.href = `?${data.data._id}`;
+        window.location.href = `?conversationId=${data.data._id}`;
       } catch (error) {
         console.log(error);
       }
@@ -91,6 +91,15 @@ function ChatUser() {
     }
   }, [user]);
 
+  socket?.on("conversation", (data: any) => {
+    const prevState = [...conversations];
+    const index = prevState.findIndex(
+      (conversation) => conversation._id === data._id
+    );
+    prevState[index] = data;
+    setConversations(prevState);
+  });
+
   return (
     <Stack>
       <Typography variant="h5">Chats</Typography>
@@ -133,6 +142,7 @@ function ChatUser() {
               borderRadius: 2,
               backgroundColor: "background.paper",
               border: "1px solid green",
+              padding: 2,
             }}
           >
             {loading && (
@@ -141,19 +151,22 @@ function ChatUser() {
               </Box>
             )}
 
-            <Typography variant="h5" margin={1}>
+            <Typography variant="h5" margin={1} color="InfoText">
               users
             </Typography>
             <Divider />
 
             {users.map((user: any, index: number) => {
               const labelId = `checkbox-list-secondary-label-${user}`;
+
               return (
-                <>
+                <React.Fragment key={user?._id}>
                   <ListItem
-                    key={user}
                     disablePadding
-                    sx={{ "&:hover": { backgroundColor: "grey.500" } }}
+                    sx={{
+                      borderRadius: 1,
+                      "&:hover": { backgroundColor: "info.main" },
+                    }}
                     onClick={handleSelect(user)}
                   >
                     <ListItemButton>
@@ -169,7 +182,7 @@ function ChatUser() {
                   {index !== users.length - 1 && (
                     <Divider sx={{ padding: 0 }} />
                   )}
-                </>
+                </React.Fragment>
               );
             })}
           </List>
@@ -199,20 +212,26 @@ function ChatUser() {
               }
             });
           }
+          // if (isRead._id === conversation._id) {
+          //   conversation.isRead = true;
+          // }
           return (
-            <>
+            <React.Fragment key={conversation._id}>
               <UserList
-                lastMessage={conversation.lastMessage || "No message"}
+                lastMessage={
+                  conversation.lastMessage.slice(0, 30) + "..." || "No message"
+                }
                 time={dayjs(conversation.lastUpdate).format("hh:mm A")}
                 userName={participant.name}
                 userAvatar={participant?.avatar}
                 isOnline={participant.isOnline}
+                isRead={conversation.isRead}
                 _id={conversation._id}
               />
               {index !== conversations.length - 1 && (
                 <Divider sx={{ padding: 0 }} />
               )}
-            </>
+            </React.Fragment>
           );
         })}
       </List>

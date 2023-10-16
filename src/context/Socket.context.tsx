@@ -1,7 +1,7 @@
 "use client";
 
 import useAuthUser from "@/hooks/AuthUser";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { Socket, io } from "socket.io-client";
 
 export const SocketContext = createContext<any>(null);
@@ -30,6 +30,10 @@ function SocketContextProvider({ children }: React.PropsWithChildren) {
       });
       setSocket(socket);
     }
+
+    return () => {
+      socket?.disconnect();
+    };
   }, [user]);
 
   return (

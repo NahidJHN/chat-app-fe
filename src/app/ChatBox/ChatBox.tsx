@@ -9,11 +9,11 @@ import {
 import React, { useContext, useEffect, useRef, useState } from "react";
 import ChatBoxHeader from "./ChatBox-Header";
 import SendIcon from "@mui/icons-material/SendOutlined";
-import Message from "../../components/Message/Message";
 import { useSearchParams } from "next/navigation";
 import baseUrl from "@/utils/baseURL";
 import useAuthUser from "@/hooks/AuthUser";
 import { SocketContext } from "@/context/Socket.context";
+import Message from "@/components/Message/Message";
 
 function ChatBox() {
   const boxRef = useRef<HTMLElement>(null);
@@ -50,12 +50,15 @@ function ChatBox() {
     e.currentTarget.reset();
   };
 
+  const handleFocus = () => {
+    socket?.emit("readText", conversationId);
+  };
+
   useEffect(() => {
     //fetch messages function
     const fetchMessages = async () => {
       try {
         const { data } = await baseUrl.get(`messages/${conversationId}`);
-        console.log(data);
         setMessages(data.data);
       } catch (error) {
         console.log(error);
@@ -70,6 +73,7 @@ function ChatBox() {
             `users/${user?._id}/${conversationId}`
           );
           if (onlineUsers.length) {
+            console.log(onlineUsers);
             onlineUsers?.forEach((item: any) => {
               if (item._id === data.data._id) {
                 data.data.isOnline = false;
@@ -77,7 +81,7 @@ function ChatBox() {
               }
             });
           }
-
+          console.log(data.data);
           setParticipant(data.data);
         } catch (error) {
           console.log(error);
@@ -86,25 +90,22 @@ function ChatBox() {
 
       fetchParticipant();
     }
-
-    return () => {
-      socket?.disconnect();
-    };
   }, [conversationId, user]);
 
-  useEffect(() => {
-    socket?.on("chat", (data: any) => {
-      const prevState = [...messages];
-      prevState.push(data);
-      setMessages(prevState);
-    });
-  }, [messages]);
+  useEffect(() => {}, [messages]);
 
   useEffect(() => {
     if (boxRef.current) {
       boxRef.current.scrollTop = boxRef.current.scrollHeight + 500;
     }
-  }, [boxRef.current?.scrollTop, messages]);
+  }, [messages]);
+
+  socket?.on("message", (data: any) => {
+    console.log(data);
+    const prevState = [...messages];
+    prevState.push(data);
+    setMessages(prevState);
+  });
 
   return (
     <Stack>
@@ -148,6 +149,7 @@ function ChatBox() {
                 type="text"
                 name="message"
                 placeholder="Type a message"
+                onFocus={handleFocus}
                 sx={{
                   width: "90%",
                   margin: "auto",
