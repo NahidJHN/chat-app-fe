@@ -90,8 +90,6 @@ function Message({ isUser, message }: PropTypes) {
             >
               Unsent
             </MenuItem>
-            {/* <MenuItem onClick={handleClose}>My account</MenuItem>
-            <MenuItem onClick={handleClose}>Logout</MenuItem> */}
           </Menu>
         </Stack>
       </Stack>

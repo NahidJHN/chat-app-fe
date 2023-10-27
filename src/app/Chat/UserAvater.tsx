@@ -32,37 +32,24 @@ const StyledBadge = styled(Badge)<BadgeOwnProps>(({ theme, isOnline }) => {
           width: "100%",
           height: "100%",
           borderRadius: "50%",
-          //   animation: "ripple 1.2s infinite ease-in-out",
           border: "1px solid currentColor",
           content: '""',
         },
       }),
     },
-    //   "@keyframes ripple": {
-    //     "0%": {
-    //       transform: "scale(.8)",
-    //       opacity: 1,
-    //     },
-    //     "100%": {
-    //       transform: "scale(2.4)",
-    //       opacity: 0,
-    //     },
-    //   },
   };
 });
 
 function UserAvatar(props: PropTypes) {
   return (
-    <ListItemAvatar>
-      <StyledBadge
-        isOnline={props.isOnline}
-        overlap="circular"
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        variant="dot"
-      >
-        <Avatar alt={props.userName} src={props.userAvatar} />
-      </StyledBadge>
-    </ListItemAvatar>
+    <StyledBadge
+      isOnline={props.isOnline}
+      overlap="circular"
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      variant="dot"
+    >
+      <Avatar alt={props.userName} src={props.userAvatar} />
+    </StyledBadge>
   );
 }
 

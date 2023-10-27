@@ -13,6 +13,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import { Stack } from "@mui/material";
 import { redirect } from "next/navigation";
+import baseUrl from "@/utils/baseURL";
 
 function Copyright(props: any) {
   return (
@@ -37,20 +38,12 @@ export default function SignIn() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     try {
-      const res = await fetch("http://localhost:5050/api/v1/auth/login", {
-        method: "post",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        mode: "cors",
-        body: JSON.stringify({
-          email: data.get("email"),
-          password: data.get("password"),
-        }),
+      const { data: res } = await baseUrl.post("auth/login", {
+        email: data.get("email"),
+        password: data.get("password"),
       });
-      const mainRes = await res.json();
 
-      localStorage.setItem("chat-app-token", mainRes.data.accessToken);
+      localStorage.setItem("chat-app-token", res.data.accessToken);
       window.location.href = "/";
     } catch (error) {
       console.log(error);
@@ -73,7 +66,7 @@ export default function SignIn() {
     >
       <Paper
         sx={{
-          width: "32%",
+          width: { xs: "95%", md: "32%" },
           borderRadius: 3,
           position: "absolute",
           zIndex: 20000,

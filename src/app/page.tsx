@@ -1,23 +1,18 @@
 "use client";
-
 import * as React from "react";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Unstable_Grid2";
-import Drawer from "@mui/material/Drawer";
 import Typography from "@mui/material/Typography";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import Alert from "@mui/material/Alert";
-import AlertTitle from "@mui/material/AlertTitle";
-import { Button, Container, Divider } from "@mui/material";
-import ChatUser from "./ChatUser/ChatUser";
-import ChatBox from "./ChatBox/ChatBox";
+import { Button, Container } from "@mui/material";
 import { useRouter } from "next/navigation";
+import Chat from "@/app/Chat/Chat";
 
 export default function HomePage() {
   const router = useRouter();
 
-  if (localStorage.getItem("chat-app-token") === null) {
+  if (
+    typeof window !== undefined &&
+    localStorage?.getItem("chat-app-token") === null
+  ) {
     return (
       <>
         <Typography variant="h3">
@@ -29,24 +24,16 @@ export default function HomePage() {
   }
 
   return (
-    <Container sx={{ paddingY: 2 }}>
-      <Grid
-        container
-        spacing={1}
+    <Container>
+      <Box
         sx={{
-          backgroundColor: "primary",
-          color: "text.white",
-          borderRadius: 5,
-          padding: 2,
+          border: "1px solid green",
+          margin: 1,
+          height: "95vh",
         }}
       >
-        <Grid md={4} sx={{ border: "1px solid #ddd" }}>
-          <ChatUser />
-        </Grid>
-        <Grid md={8} sx={{ border: "1px solid #ddd" }}>
-          <ChatBox />
-        </Grid>
-      </Grid>
+        <Chat />
+      </Box>
     </Container>
   );
 }

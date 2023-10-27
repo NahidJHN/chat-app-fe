@@ -1,0 +1,188 @@
+import {
+  Box,
+  Button,
+  IconButton,
+  InputAdornment,
+  Stack,
+  TextField,
+  useTheme,
+} from "@mui/material";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import SendIcon from "@mui/icons-material/SendOutlined";
+import { useSearchParams } from "next/navigation";
+import baseUrl from "@/utils/baseURL";
+import { SocketContext } from "@/context/Socket.context";
+import Message from "@/components/Message/Message";
+import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
+import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
+
+type PropTypes = {
+  participant: any;
+  user: any;
+};
+
+function ChatBox({ participant, user }: PropTypes) {
+  const theme = useTheme();
+  const boxRef = useRef<HTMLElement>(null);
+
+  const [messages, setMessages] = useState<any[]>([]);
+  const { socket } = useContext(SocketContext);
+
+  const searchParams = useSearchParams();
+  const conversationId = searchParams.get("conversationId");
+  const [message, setMessage] = useState<string>("");
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState<boolean>(false);
+
+  const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
+    const formData = new FormData(e.currentTarget);
+
+    e.preventDefault();
+    const message = {
+      sender: user?._id,
+      content: formData.get("message"),
+      conversation: conversationId,
+      socketId: participant.socketId,
+      receiver: participant._id,
+    };
+
+    socket?.emit("chat", message);
+    setIsEmojiPickerOpen(false);
+    setMessage("");
+  };
+
+  const handleFocus = () => {
+    setIsEmojiPickerOpen(false);
+    if (
+      conversationId &&
+      messages[messages.length - 1]?.sender !== user?._id &&
+      messages[messages.length - 1]?.read === false
+    ) {
+      socket?.emit("readText", conversationId);
+    }
+  };
+
+  useEffect(() => {
+    if (user && conversationId) {
+      //fetch messages function
+      const fetchMessages = async () => {
+        try {
+          const { data } = await baseUrl.get(`messages/${conversationId}`);
+          setMessages(data.data);
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      fetchMessages();
+    }
+  }, [conversationId, user]);
+
+  useEffect(() => {
+    if (boxRef.current) {
+      boxRef.current.scrollTop = boxRef.current.scrollHeight + 500;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (socket && conversationId) {
+      socket.emit("chat-room", { conversationId });
+    }
+  }, [socket, conversationId]);
+
+  useEffect(() => {
+    if (socket?.connected) {
+      socket.on("chat", (data: any) => {
+        setMessages((prevState) => [...prevState, data]);
+      });
+    }
+  }, [socket?.connected]);
+
+  return (
+    <Stack
+      justifyContent="space-between"
+      direction="column"
+      height="85vh"
+      p={2}
+    >
+      <Box
+        height="100%"
+        sx={{
+          overflowY: "auto",
+          scrollBehavior: "smooth",
+        }}
+        ref={boxRef}
+      >
+        {messages.map((message) => {
+          const isUser = message.sender === user?._id;
+          return (
+            <Message
+              key={message._id}
+              isUser={isUser}
+              message={message.content}
+            />
+          );
+        })}
+      </Box>
+
+      <Stack
+        direction="row"
+        component="form"
+        onSubmit={handleSendMessage}
+        sx={{ position: "relative" }}
+      >
+        <TextField
+          fullWidth
+          size="small"
+          type="text"
+          name="message"
+          placeholder="Type a message"
+          onFocus={handleFocus}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          sx={{
+            margin: "auto",
+            ":focus": {
+              borderColor: "primary.main",
+            },
+          }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment
+                position="end"
+                component={IconButton}
+                type="submit"
+                sx={{ width: 40, height: 40, borderRadius: "50%" }}
+              >
+                <SendIcon />
+              </InputAdornment>
+            ),
+            startAdornment: (
+              <InputAdornment
+                position="end"
+                component={IconButton}
+                sx={{ width: 40, height: 40, borderRadius: "50%" }}
+                onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
+              >
+                <EmojiEmotionsIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        {isEmojiPickerOpen && (
+          <Box sx={{ position: "absolute", bottom: 50 }}>
+            <EmojiPicker
+              searchDisabled
+              emojiStyle={EmojiStyle.FACEBOOK}
+              theme={theme.palette.mode === "dark" ? Theme.DARK : Theme.LIGHT}
+              lazyLoadEmojis={true}
+              onEmojiClick={(event) => {
+                setMessage((message) => message + event.emoji);
+              }}
+            />
+          </Box>
+        )}
+      </Stack>
+    </Stack>
+  );
+}
+
+export default ChatBox;
