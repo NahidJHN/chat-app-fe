@@ -31,7 +31,6 @@ interface ChatBoxProps {
   isOnline: boolean;
   lastActiveTime: string;
   avatar: string;
-  socketId: string;
 }
 
 function ChatHeader(props: ChatBoxProps) {

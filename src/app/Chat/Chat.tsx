@@ -19,6 +19,14 @@ import SearchUser from "./SearchUser";
 import ChatHeader from "./Chat-Header";
 import { useSearchParams } from "next/navigation";
 import ChatBox from "./ChatBox";
+import {
+  fetchMessages,
+  filterParticipants,
+  getConversation,
+  getGroupConversation,
+  getParticipantByUserId,
+  getPrivateConversation,
+} from "./ApiCalls";
 
 const drawerWidth = 300;
 
@@ -114,8 +122,13 @@ export default function MiniDrawer() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
+
   const [conversations, setConversations] = useState<any[]>([]);
-  const [participant, setParticipant] = useState<any>(null); //participant is the user with whom the current user is chatting
+  const [groupConversations, setGroupConversations] = useState<any[]>([]);
+  const [privateConversations, setPrivateConversations] = useState<any[]>([]);
+  const [conversation, setConversation] = useState<any>(null); //participant is the user with whom the current user is chatting
+  const [participants, setParticipants] = useState<any>([]);
+  const [messages, setMessages] = useState<any[]>([]);
 
   const user = useAuthUser();
   const searchParams = useSearchParams();
@@ -125,54 +138,65 @@ export default function MiniDrawer() {
 
   useEffect(() => {
     if (user) {
-      // fetch conversation
-      const getConversation = async () => {
-        try {
-          const { data } = await baseUrl(`conversations/${user._id}`);
-          setConversations(data.data);
-        } catch (error) {
-          console.log(error);
-        }
-      };
-      getConversation();
+      getConversation(setConversations, user._id);
+      getGroupConversation(setGroupConversations, user._id);
+      getPrivateConversation(setPrivateConversations, user._id);
+      getParticipantByUserId(setParticipants, user._id);
     }
   }, [user]);
 
   useEffect(() => {
-    if (user && conversationId) {
-      fetchParticipant(onlineUsers, user, conversationId);
+    if (
+      conversationId &&
+      conversations.length &&
+      participants.length &&
+      (privateConversations.length || groupConversations.length)
+    ) {
+      const conversation = conversations.find(
+        (item) => item._id === conversationId
+      );
+      const filterConversation = filterParticipants(
+        conversation,
+        groupConversations,
+        privateConversations,
+        participants,
+        onlineUsers,
+        messages
+      );
+      setConversation(filterConversation);
     }
-  }, [conversationId, user, onlineUsers]);
+  }, [
+    conversationId,
+    participants,
+    onlineUsers,
+    conversations,
+    groupConversations,
+    privateConversations,
+    messages,
+  ]);
 
-  socket?.on("conversation", (data: any) => {
-    const prevState = [...conversations];
-    const index = prevState.findIndex(
-      (conversation) => conversation._id === data._id
-    );
-    prevState[index] = data;
-    setConversations(prevState);
-  });
-
-  const fetchParticipant = async (
-    onlineUsers: any[],
-    user: any,
-    conversationId: string
-  ) => {
-    try {
-      const { data } = await baseUrl.get(`users/${user._id}/${conversationId}`);
-      if (onlineUsers.length) {
-        onlineUsers?.forEach((item: any) => {
-          if (item._id === data.data._id) {
-            data.data.socketId = item.socketId;
-          }
-        });
-      }
-
-      setParticipant(data.data);
-    } catch (error) {
-      console.log(error);
+  useEffect(() => {
+    if (conversationId) {
+      fetchMessages(conversationId, setMessages);
     }
-  };
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (socket?.connected) {
+      socket.on("chat", (data: any) => {
+        setMessages((prevState) => [...prevState, data]);
+      });
+      socket.on("conversation", (data: any) => {
+        console.log(data);
+        const prevState = [...conversations];
+        const index = prevState.findIndex(
+          (conversation) => conversation._id === data._id
+        );
+        prevState[index] = data;
+        setConversations(prevState);
+      });
+    }
+  }, [socket?.connected]);
 
   return (
     <Box sx={{ display: "flex", position: "relative", maxHeight: "100%" }}>
@@ -204,13 +228,12 @@ export default function MiniDrawer() {
             )}
           </Box>
           <Box sx={{ flexGrow: 1, marginLeft: { xs: 0.5, sm: 1, md: 3 } }}>
-            {participant && (
+            {conversation && (
               <ChatHeader
-                avatar={participant.avatar}
-                isOnline={participant.isOnline}
-                lastActiveTime={participant.lastActiveTime}
-                userName={participant.name}
-                socketId={participant.socketId}
+                avatar={conversation.avatar}
+                isOnline={conversation.isOnline}
+                lastActiveTime={conversation.lastActiveTime}
+                userName={conversation.name}
               />
             )}
           </Box>
@@ -234,13 +257,16 @@ export default function MiniDrawer() {
         <Divider />
         <Conversations
           conversations={conversations}
+          groupConversations={groupConversations}
+          privateConversations={privateConversations}
+          participants={participants}
           user={user}
           onlineUsers={onlineUsers}
         />
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1 }}>
         <DrawerHeader />
-        <ChatBox participant={participant} user={user} />
+        <ChatBox user={user} messages={messages} />
       </Box>
     </Box>
   );

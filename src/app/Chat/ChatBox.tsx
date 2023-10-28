@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   IconButton,
   InputAdornment,
   Stack,
@@ -10,22 +9,20 @@ import {
 import React, { useContext, useEffect, useRef, useState } from "react";
 import SendIcon from "@mui/icons-material/SendOutlined";
 import { useSearchParams } from "next/navigation";
-import baseUrl from "@/utils/baseURL";
 import { SocketContext } from "@/context/Socket.context";
 import Message from "@/components/Message/Message";
 import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 
 type PropTypes = {
-  participant: any;
   user: any;
+  messages: any[];
 };
 
-function ChatBox({ participant, user }: PropTypes) {
+function ChatBox({ user, messages }: PropTypes) {
   const theme = useTheme();
   const boxRef = useRef<HTMLElement>(null);
 
-  const [messages, setMessages] = useState<any[]>([]);
   const { socket } = useContext(SocketContext);
 
   const searchParams = useSearchParams();
@@ -41,40 +38,19 @@ function ChatBox({ participant, user }: PropTypes) {
       sender: user?._id,
       content: formData.get("message"),
       conversation: conversationId,
-      socketId: participant.socketId,
-      receiver: participant._id,
     };
 
-    socket?.emit("chat", message);
+    socket.emit("chat", message);
     setIsEmojiPickerOpen(false);
     setMessage("");
   };
 
   const handleFocus = () => {
     setIsEmojiPickerOpen(false);
-    if (
-      conversationId &&
-      messages[messages.length - 1]?.sender !== user?._id &&
-      messages[messages.length - 1]?.read === false
-    ) {
-      socket?.emit("readText", conversationId);
+    if (conversationId && messages[messages.length - 1]?.sender !== user?._id) {
+      socket.emit("readText", { _id: conversationId, userId: user?._id });
     }
   };
-
-  useEffect(() => {
-    if (user && conversationId) {
-      //fetch messages function
-      const fetchMessages = async () => {
-        try {
-          const { data } = await baseUrl.get(`messages/${conversationId}`);
-          setMessages(data.data);
-        } catch (error) {
-          console.log(error);
-        }
-      };
-      fetchMessages();
-    }
-  }, [conversationId, user]);
 
   useEffect(() => {
     if (boxRef.current) {
@@ -87,14 +63,6 @@ function ChatBox({ participant, user }: PropTypes) {
       socket.emit("chat-room", { conversationId });
     }
   }, [socket, conversationId]);
-
-  useEffect(() => {
-    if (socket?.connected) {
-      socket.on("chat", (data: any) => {
-        setMessages((prevState) => [...prevState, data]);
-      });
-    }
-  }, [socket?.connected]);
 
   return (
     <Stack

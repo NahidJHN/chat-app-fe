@@ -1,44 +1,52 @@
 import { Box, Divider } from "@mui/material";
 import dayjs from "dayjs";
-import React from "react";
+import React, { use } from "react";
 import UserList from "./UserList";
+import { filterParticipants } from "./ApiCalls";
 
 type PropTypes = {
   conversations: any[];
   user: any;
   onlineUsers: any[];
+  groupConversations: any[];
+  privateConversations: any[];
+  participants: any[];
 };
 
-function Conversations({ conversations, user, onlineUsers }: PropTypes) {
+function Conversations({
+  conversations,
+  onlineUsers,
+  groupConversations,
+  privateConversations,
+  participants,
+  user,
+}: PropTypes) {
   return (
     <Box>
       {conversations.map((conversation: any, index: number) => {
-        const participant =
-          conversation?.creator._id === user?._id
-            ? conversation?.participant
-            : conversation?.creator;
+        const filterConversation = filterParticipants(
+          conversation,
+          groupConversations,
+          privateConversations,
+          participants,
+          onlineUsers,
+          []
+        );
 
-        if (onlineUsers.length) {
-          onlineUsers.forEach((item: any) => {
-            if (item._id === participant._id) {
-              participant.isOnline = true;
-              participant.socketId = item.socketId;
-            }
-          });
-        }
         return (
-          <React.Fragment key={conversation._id}>
+          <React.Fragment key={filterConversation._id}>
             <UserList
               open={true}
               lastMessage={
-                conversation.lastMessage.slice(0, 30) + "..." || "No message"
+                filterConversation.lastMessage?.content?.slice(0, 30) + "..." ||
+                "No message"
               }
-              time={dayjs(conversation.lastUpdate).format("hh:mm A")}
-              userName={participant.name}
-              userAvatar={participant?.avatar}
-              isOnline={participant.isOnline}
-              isRead={conversation.isRead}
-              _id={conversation._id}
+              time={dayjs(filterConversation.lastUpdate).format("hh:mm A")}
+              userName={filterConversation?.name}
+              userAvatar={filterConversation?.avatar}
+              isOnline={filterConversation.isOnline}
+              isRead={filterConversation?.readPersons?.includes(user?._id)}
+              _id={filterConversation._id}
             />
             {index !== conversations.length - 1 && (
               <Divider sx={{ padding: 0 }} />
