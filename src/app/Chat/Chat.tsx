@@ -27,7 +27,8 @@ import {
   getParticipantByUserId,
   getPrivateConversation,
 } from "./ApiCalls";
-
+import MapsUgcIcon from "@mui/icons-material/MapsUgc";
+import FormDialog from "./SearchModal";
 const drawerWidth = 300;
 
 const openedMixin = (theme: Theme): CSSObject => ({
@@ -130,6 +131,9 @@ export default function MiniDrawer() {
   const [participants, setParticipants] = useState<any>([]);
   const [messages, setMessages] = useState<any[]>([]);
 
+  //search modal
+  const [openModal, setOpenModal] = useState(false);
+
   const user = useAuthUser();
   const searchParams = useSearchParams();
   const conversationId = searchParams.get("conversationId");
@@ -161,7 +165,7 @@ export default function MiniDrawer() {
         privateConversations,
         participants,
         onlineUsers,
-        messages
+        user
       );
       setConversation(filterConversation);
     }
@@ -248,6 +252,11 @@ export default function MiniDrawer() {
             alignItems: "center",
           }}
         >
+          <Tooltip title="Create Conversation" placement="bottom">
+            <IconButton color="primary" onClick={() => setOpenModal(true)}>
+              <MapsUgcIcon />
+            </IconButton>
+          </Tooltip>
           <Typography variant="h6" flex={1} textAlign="center">
             Chats
           </Typography>
@@ -268,6 +277,11 @@ export default function MiniDrawer() {
         <DrawerHeader />
         <ChatBox user={user} messages={messages} />
       </Box>
+      <FormDialog
+        user={user}
+        openModal={openModal}
+        setOpenModal={setOpenModal}
+      />
     </Box>
   );
 }

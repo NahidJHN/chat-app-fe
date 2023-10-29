@@ -30,7 +30,7 @@ function Conversations({
           privateConversations,
           participants,
           onlineUsers,
-          []
+          user
         );
 
         return (
@@ -38,7 +38,7 @@ function Conversations({
             <UserList
               open={true}
               lastMessage={
-                filterConversation.lastMessage?.content?.slice(0, 30) + "..." ||
+                filterConversation.lastMessage?.content?.slice(0, 15) + "..." ||
                 "No message"
               }
               time={dayjs(filterConversation.lastUpdate).format("hh:mm A")}

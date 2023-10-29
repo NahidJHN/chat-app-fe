@@ -67,7 +67,7 @@ export const filterParticipants = (
   privateConversations: any[],
   participants: any[],
   onlineUsers: any[],
-  messages: any[]
+  user: any
 ) => {
   const isGroup = conversation?.type === "group";
 
@@ -81,11 +81,17 @@ export const filterParticipants = (
     const privateConversation = privateConversations?.find(
       (item: any) => item._id === conversation.privateConversation
     );
-    conversation.name = privateConversation?.name;
+    //search the other person, creator or participant
+    const searchValue =
+      privateConversation.participant === user?._id
+        ? privateConversation?.creator
+        : privateConversation?.participant;
+
     const participant = participants?.find(
-      (item: any) => item._id === privateConversation?.participant
+      (item: any) => item._id === searchValue
     );
     conversation.avatar = participant?.avatar;
+    conversation.name = participant?.name;
 
     const onlineUser = onlineUsers?.find(
       (item: any) => item._id === participant?._id

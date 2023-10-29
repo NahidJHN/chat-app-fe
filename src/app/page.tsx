@@ -13,27 +13,22 @@ export default function HomePage() {
     typeof window !== undefined &&
     localStorage?.getItem("chat-app-token") === null
   ) {
-    return (
-      <>
-        <Typography variant="h3">
-          You need to login to access this page
-        </Typography>
-        <Button onClick={() => router.push("/auth/login")}>Login Now</Button>;
-      </>
-    );
+    router.replace("/auth/login");
   }
 
   return (
-    <Container>
-      <Box
-        sx={{
-          border: "1px solid green",
-          margin: 1,
-          height: "95vh",
-        }}
-      >
-        <Chat />
-      </Box>
-    </Container>
+    typeof window !== undefined && (
+      <Container>
+        <Box
+          sx={{
+            border: "1px solid green",
+            margin: 1,
+            height: "95vh",
+          }}
+        >
+          <Chat />
+        </Box>
+      </Container>
+    )
   );
 }
